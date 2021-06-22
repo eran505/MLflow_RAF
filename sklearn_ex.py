@@ -7,6 +7,9 @@ import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import ElasticNet
+from mlflow.models.signature import ModelSignature
+
+from mlflow.types.schema import Schema, ColSpec
 
 import mlflow
 import mlflow.sklearn
@@ -17,6 +20,34 @@ def eval_metrics(actual, pred):
     mae = mean_absolute_error(actual, pred)
     r2 = r2_score(actual, pred)
     return rmse, mae, r2
+
+
+def get_Schema():
+
+    input_schema = Schema([
+    ColSpec("float", "fixed acidity"),
+    ColSpec("double", "volatile"),
+    ColSpec("double", "citric acid"),
+    ColSpec("float", "residual sugar"),
+    ColSpec("integer", "total sulfur dioxide	"),
+    ColSpec("long", "free sulfur dioxide	"),
+    ColSpec("double", "chlorides"),
+    ColSpec("double", "density"),
+    ColSpec("double", "Ph"),
+    ColSpec("double", "alcohol"),
+    ColSpec("double", "sulphates"),
+    ])
+    output_schema = Schema([ColSpec("integer","quality")])
+    signature = ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    input_example = {
+        "sulphates": 5.1,
+        "alcohol": 3.5,
+        "Ph": 1.4,
+        "density": 0.2
+    }
+
+    return signature,input_example
 
 
 
@@ -58,5 +89,5 @@ if __name__ == "__main__":
         mlflow.log_metric("rmse", rmse)
         mlflow.log_metric("r2", r2)
         mlflow.log_metric("mae", mae)
-
-        mlflow.sklearn.log_model(lr, "model")
+        signature,input_ex = get_Schema()
+        mlflow.sklearn.log_model(lr, "model",signature=signature,input_example = data.loc[:, data.columns != 'quality'].head(1))
